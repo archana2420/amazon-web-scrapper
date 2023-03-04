@@ -1,13 +1,19 @@
 import pandas as pd
 
 from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
 from time import sleep
 
 from bs4 import BeautifulSoup
 
+print("-------------Amazon Product Scraper--------------")
+product = input("Enter product name: ")
+no_of_pages = int(input("Enter the number of pages to scrape: "))
+
 PATH = "C:\Program Files (x86)\chromedriver.exe"
 
-# -------------------------PART - 1 ASSIGNMENT-------------------------------------------------------
+
 
 products = []
 prices_list =[]
@@ -17,12 +23,16 @@ ratings_list =[]
 reviews_list =[]
 count = 0
 browser = webdriver.Chrome(executable_path=PATH)
-browser.get('https://www.amazon.in/s?k=bags&crid=2M096C61O4MLT&qid=1653308124&sprefix=ba%2Caps%2C283&ref=sr_pg_1')
+browser.get('https://www.amazon.in/')
+WebElement = browser.find_element(By.ID,"twotabsearchtextbox")
+WebElement.send_keys(product)
+searchButton = browser.find_element(By.ID,"nav-search-submit-button")
+searchButton.click()
 
 while True:
 
     browser.maximize_window()
-
+    
     pageSource = browser.page_source
     soup = BeautifulSoup(pageSource, "html.parser")
     content = soup.find_all(attrs={'data-component-type':'s-search-result'})
@@ -41,13 +51,15 @@ while True:
             if ratings and reviews:
                 ratings_list.append(ratings.get_text())
                 reviews = reviews.get_text()
+                reviews = reviews.replace("(","")
+                reviews = reviews.replace(")","")
                 reviews_list.append(reviews)
                 titles_list.append(title.get_text())
                 urls_list.append(url)
                 prices_list.append(price.get_text())
     count +=1 
     print("Scrapping Page :",count)
-    if count == 20:
+    if count == no_of_pages:
         break
     
     pagination = browser.find_element_by_xpath("//a[@class='s-pagination-item s-pagination-next s-pagination-button s-pagination-separator']")
@@ -70,7 +82,7 @@ amazon_data = pd.DataFrame(
 
 sleep(2)
 
-amazon_data.to_csv('file_name.csv')
+amazon_data.to_csv(f'amazon {product} scrapped data.csv')
 browser.quit()
 
 
